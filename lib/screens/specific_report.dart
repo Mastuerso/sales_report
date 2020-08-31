@@ -113,13 +113,16 @@ class _SpecificReportState extends State<SpecificReport> {
       });
     });
     // keysWithDates is very important
+    // print(keysWithDates);
 
     List<DropdownMenuItem<DateTime>> dropList = [
       DropdownMenuItem(
         child: Text('---'),
         value: DateTime(0),
-      )
+      ),
     ];
+
+    // print(uniqueDates);
 
     uniqueDates.forEach((element) {
       dropList.add(
@@ -128,30 +131,16 @@ class _SpecificReportState extends State<SpecificReport> {
           child: Text(
             '${element.year}/${element.month}/${element.day} -- ${element.hour}:${element.minute}',
             style: Theme.of(context).textTheme.bodyText1.copyWith(
-                  color: keysWithDates[key].contains(element)
-                      ? Colors.green
-                      : Colors.red,
+                  color: key != ''
+                      ? keysWithDates[key].contains(element)
+                          ? Colors.green
+                          : Colors.red
+                      : Colors.amber,
                 ),
           ),
         ),
       );
     });
-
-    // keysWithDates.forEach((customer, dateList) {
-    //   dateList.forEach((element) {
-    //     dropList.add(
-    //       DropdownMenuItem(
-    //         value: element,
-    //         child: Text(
-    //           '${element.year}/${element.month}/${element.day} -- ${element.hour}:${element.minute}',
-    //           style: Theme.of(context).textTheme.bodyText1.copyWith(
-    //                 color: customer == key ? Colors.green : Colors.red,
-    //               ),
-    //         ),
-    //       ),
-    //     );
-    //   });
-    // });
 
     return dropList;
   }
@@ -181,7 +170,7 @@ class _SpecificReportState extends State<SpecificReport> {
       DropdownMenuItem(
         child: Text('---'),
         value: '',
-      )
+      ),
     ];
 
     keysWithDates.forEach((customer, dateList) {
