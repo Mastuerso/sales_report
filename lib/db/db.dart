@@ -25,7 +25,7 @@ List<SaleReport> sales = List<SaleReport>.generate(
 List<ReportItem> catalog = List<ReportItem>.generate(
     itemCount,
     (index) => ReportItem(
-          name: mockName('female').toUpperCase() + ' JOINT',
+          name: mockName('female') + ' doll',
           price: _calculatePrice(),
         ));
 

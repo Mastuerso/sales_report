@@ -38,6 +38,17 @@ class SaleReport {
     };
   }
 
+  List<dynamic> toList() {
+    return [
+      item?.name,
+      quantity,
+      item?.price,
+      total,
+      customer,
+      dateTime?.millisecondsSinceEpoch
+    ];
+  }
+
   factory SaleReport.fromMap(Map<String, dynamic> map) {
     if (map == null) return null;
 

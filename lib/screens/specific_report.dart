@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:intl/intl.dart';
+import 'package:oktoast/oktoast.dart';
+
 import 'package:sales_report/db/db.dart';
 import 'package:sales_report/docs/models/sale_report.dart';
-// import 'package:sales_report/docs/models/sale_report.dart';
+import 'package:sales_report/screens/utils/save_image_helper.dart';
 
 class SpecificReport extends StatefulWidget {
   static String routeName = 'SpecificReport';
@@ -16,18 +20,13 @@ class _SpecificReportState extends State<SpecificReport> {
   List<DropdownMenuItem<String>> dropdownCustomers;
   String customersValue = '';
   DateTime datesValue = DateTime(0);
-
-  @override
-  void initState() {
-    super.initState();
-    // dropdownCustomers = generateDropCustomers(context);
-    // dropdownDates = generateDropDates(context);
-  }
+  GlobalKey toPrint = GlobalKey();
 
   @override
   Widget build(BuildContext context) {
     dropdownDates = generateDropDates(context, key: customersValue);
     dropdownCustomers = generateDropCustomers(context, date: datesValue);
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Specific Report'),
@@ -57,9 +56,31 @@ class _SpecificReportState extends State<SpecificReport> {
                   });
                 },
               ),
+              // Screenshot
+              IconButton(
+                icon: Icon(Icons.camera_roll),
+                onPressed: () async => await screenshot(
+                  toPrint.currentContext.findRenderObject(),
+                  onSuccess: () => showToast(
+                    'Success',
+                    backgroundColor: Colors.green.withOpacity(0.7),
+                    radius: 13,
+                  ),
+                  onError: () => showToast(
+                    'Failled',
+                    backgroundColor: Colors.amber.withOpacity(0.7),
+                    radius: 13,
+                  ),
+                ),
+              ),
             ],
           ),
-          buildSale(customer: customersValue, date: datesValue),
+          Expanded(
+            child: RepaintBoundary(
+              key: toPrint,
+              child: buildSale(customer: customersValue, date: datesValue),
+            ),
+          ),
         ],
       ),
     );
@@ -72,21 +93,103 @@ class _SpecificReportState extends State<SpecificReport> {
               element.customer == customer && element.dateTime == date));
 
       // print(customerSales.length);
-      return Text('$customer @ $date with ${customerSales.length}');
+      return buildItemList(customerSales);
     } else if (customer != '' && date == DateTime(0)) {
       List<SaleReport> customerSales = List<SaleReport>.from(
           sales.where((element) => element.customer == customer));
 
-      print(customerSales.length);
-      return Text('$customer with ${customerSales.length}');
+      // print(customerSales.length);
+      // return Text('$customer with ${customerSales.length}');
+      return buildItemList(customerSales);
     } else if (customer == '' && date != DateTime(0)) {
       List<SaleReport> customerSales = List<SaleReport>.from(
           sales.where((element) => element.dateTime == date));
 
-      print(customerSales.length);
-      return Text('$date with ${customerSales.length}');
+      // print(customerSales.length);
+      // return Text('$date with ${customerSales.length}');
+      return buildItemList(customerSales);
     }
-    return Container();
+    return Center(
+      child: Text('---'),
+    );
+  }
+
+  Widget buildItemList(List<SaleReport> customerSales) {
+    double total = 0;
+    customerSales.forEach((element) {
+      total += element.total;
+    });
+    double dividerTotalWidth = total.toString().length * 16.0;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Table(
+            columnWidths: {
+              0: FractionColumnWidth(0.10),
+              1: FractionColumnWidth(0.90),
+            },
+            children: List.generate(
+              customerSales.length,
+              (index) {
+                return TableRow(
+                  children: [
+                    Container(
+                      margin: const EdgeInsets.symmetric(vertical: 4.0),
+                      child: Text(
+                        customerSales[index].quantity.toString(),
+                        textAlign: TextAlign.end,
+                      ),
+                    ),
+                    Container(
+                      margin: const EdgeInsets.symmetric(vertical: 4.0),
+                      padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                      child: Row(
+                        children: [
+                          Text(
+                            'x   ' + customerSales[index].item.name,
+                            textAlign: TextAlign.left,
+                          ),
+                          Flexible(
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 12.0),
+                              child: Container(
+                                height: 1,
+                                color: Colors.grey[700],
+                              ),
+                            ),
+                          ),
+                          Text(
+                            NumberFormat.simpleCurrency()
+                                .format(customerSales[index].total),
+                            textAlign: TextAlign.end,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+          Container(
+            height: 2.0,
+            // width: MediaQuery.of(context).size.width * 0.35,
+            width: dividerTotalWidth,
+            color: Colors.blue[800],
+          ),
+          Container(
+            margin: const EdgeInsets.symmetric(vertical: 4.0),
+            padding: const EdgeInsets.symmetric(horizontal: 12.0),
+            child: Text(
+              NumberFormat.simpleCurrency().format(total),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   List<DropdownMenuItem<DateTime>> generateDropDates(BuildContext context,
